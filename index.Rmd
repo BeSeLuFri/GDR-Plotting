@@ -25,12 +25,23 @@ droot <- "C:/Users/besel/OneDrive/Academia/Research/TLS/02 - First Draft/"
 # Setting up Germany shape file
 * from [Bundesamt fuer Kartographie und Geodaesie](https://gdz.bkg.bund.de/index.php/default/open-data/verwaltungsgebiete-1-250-000-kompakt-stand-01-01-vg250-kompakt-01-01.html)
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+# shp <- readOGR(paste0(droot, 
+#                       "data/01 - Getting Started/vg250_2019-01-01.gk3.shape.ebenen/vg250_ebenen/VG250_KRS.shp"))
+# kreise.shp <- sp::spTransform(shp, CRS=CRS("+init=epsg:4839"))
+# kreise.df <- fortify(kreise.shp, region = "AGS")
+# 
+# write_rds(kreise.df, "C:/Users/besel/OneDrive/Academia/Research/TLS/02 - First Draft/output/for github/kreise_df.rds")
+
+kreise.df <- read_rds("C:/Users/besel/OneDrive/Academia/Research/TLS/02 - First Draft/output/for github/kreise_df.rds")
+
+```
+
+```{r, eval=FALSE}
 shp <- readOGR(paste0(droot, 
                       "data/01 - Getting Started/vg250_2019-01-01.gk3.shape.ebenen/vg250_ebenen/VG250_KRS.shp"))
 kreise.shp <- sp::spTransform(shp, CRS=CRS("+init=epsg:4839"))
 kreise.df <- fortify(kreise.shp, region = "AGS")
-
 ```
 
 ## Merge with ECI
@@ -91,9 +102,5 @@ ggplotly(g, tooltip = c("name_2019", "eci1", "totsum")) %>%
                                     '<sup>',
                                     'Correlation between ECI and total employment is ', cr,
                                     '</sup>')))
-
-
-# htmlwidgets::saveWidget(gg, "plot.html")
-
                  
 ```
