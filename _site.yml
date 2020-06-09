@@ -1,0 +1,21 @@
+name: my-website
+output:
+  html_document:
+    css: style.css
+    number_sections: yes
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+    lib_dir: site_libs
+    self_contained: no
+output_dir: docs
+navbar:
+  title: GDR-Plotting
+  left:
+  - text: plot
+    href: index.html
+  - text: About
+    href: about.html
+
+

@@ -1,0 +1,99 @@
+---
+title: "Plot"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Prep
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+rm(list=ls())
+library(tidyverse)
+library(EconGeo)
+library(rgdal)
+library(plotly)
+library(haven)
+droot <- "C:/Users/besel/OneDrive/Academia/Research/TLS/02 - First Draft/"
+```
+
+
+
+# Setting up Germany shape file
+* from [Bundesamt fuer Kartographie und Geodaesie](https://gdz.bkg.bund.de/index.php/default/open-data/verwaltungsgebiete-1-250-000-kompakt-stand-01-01-vg250-kompakt-01-01.html)
+
+```{r, message=FALSE, warning=FALSE}
+shp <- readOGR(paste0(droot, 
+                      "data/01 - Getting Started/vg250_2019-01-01.gk3.shape.ebenen/vg250_ebenen/VG250_KRS.shp"))
+kreise.shp <- sp::spTransform(shp, CRS=CRS("+init=epsg:4839"))
+kreise.df <- fortify(kreise.shp, region = "AGS")
+
+```
+
+## Merge with ECI
+```{r, message=FALSE, warning=FALSE}
+empl.counts <- read_csv(paste0(droot, "output/01-First Data Exploration/empl_count_DDRWZ_KR2019.csv"))
+empl.counts2 <- read_csv(paste0(droot, "output/01-First Data Exploration/empl_count2_DDRWZ_KR2019.csv"))
+crswlk <- read_dta(paste0(droot, "data/01 - Getting Started/Crosswalk Counties/kr_1989_ost_2019_weight.dta"))
+
+mat <- empl.counts %>%
+  column_to_rownames(var = "kr_201901") %>%
+  replace(is.na(.),0)
+
+eci1 <- KCI(mat, RCA = TRUE)
+eci1 <- data.frame(empl.counts$kr_201901, eci1) 
+colnames(eci1)[1] <- "id"
+
+eci1 <- eci1 %>%
+  left_join(y= crswlk[, c("kr_201901", "name_2019")], by=c("id" = "kr_201901")) %>%
+  mutate(id=replace(id, id==11200, 11000)) # make the Berlin change
+
+
+tt <- kreise.df %>%
+  mutate(id = as.integer(as.character(id))) %>%
+  left_join(y=eci1, by="id")
+
+# Merge with total employment per 2019 county
+tt <-tt %>%
+  left_join(y=empl.counts2[, c("kr_201901", "totsum")], by=c("id" = "kr_201901"))
+```
+
+### Plot it
+
+```{r}
+g <- tt %>%
+  #filter(eci1!=is.na(eci1)) %>%
+  ggplot(aes(x=long,y=lat, group=group, fill=eci1, name=name_2019, info=totsum))+
+  geom_polygon()+
+  ggthemes::theme_map()
+  #coord_map()
+
+```
+
+
+And then do plotly (plotly file is to big to show in html. has to be exported)
+
+```{r, message=FALSE, warning=FALSE}
+# Get correlation between totsum and eci
+sk <- tt %>%
+  distinct(eci1, .keep_all = TRUE) %>%
+  drop_na()  
+
+cr <- round(cor(sk$totsum, sk$eci1), 2)
+
+# Make interactive plot
+ggplotly(g, tooltip = c("name_2019", "eci1", "totsum")) %>%
+  layout(title = list(text = paste0('1989 ECI on 2019 county map',
+                                    '<br>',
+                                    '<sup>',
+                                    'Correlation between ECI and total employment is ', cr,
+                                    '</sup>')))
+
+
+# htmlwidgets::saveWidget(gg, "plot.html")
+
+                 
+```

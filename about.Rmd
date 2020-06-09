@@ -1,0 +1,11 @@
+---
+title: "About This Website"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+***
+
+This is just a silly bookdown to share interactive plotly plots with others while working on the TLS paper.
+If you have any questions, please contact benedikt.fritz >at-sign< economics.ox.ac.uk
